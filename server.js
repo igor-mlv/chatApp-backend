@@ -1,10 +1,21 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { v4 as uuidv4 } from "uuid";
+import cors from "cors";
+import loginRoute from "./routes/loginRoute.js";
+import registerUserRoute from "./routes/registerUserRoute.js";
 
 const app = express();
+// Use CORS middleware to allow requests from frontend
+app.use(cors({
+    origin: "http://localhost:3000", // Allow requests from this origin
+    methods: ["GET", "POST"], // Allow these HTTP methods
+}));
+
 const httpServer = createServer(app);
+
+
+// Initialize Socket.io server
 const io = new Server(httpServer, {
     cors: {
         origin: "http://localhost:3000"
@@ -12,53 +23,14 @@ const io = new Server(httpServer, {
     methods: ["GET", "POST"],
 });
 
-// Mock database of users
-const USERS_DATABASE = [
-    { id: "1", socketID: "", userName: "superuser", isOnline: false },
-];
-
-// Define REST API endpoint to get all users
-app.get("/api/users", (req, res) => {
-    res.json(USERS_DATABASE);
-});
+// Define REST API endpoint to register a new user
+// "/api/register/:username"
+app.use(registerUserRoute);
 
 
-// Define REST API endpoint to get a user by ID
-app.get("/api/users/:id", (req, res) => {
-    const userID = req.params.id; // Get user ID from URL
-    const user = USERS_DATABASE.find((u) => u.id === userID); // Find user by ID
-
-    if (user) {
-        res.json(user); // Return user if found
-    } else {
-        res.status(404).json({ error: "User not found" }); // Return 404 if not found
-    }
-});
-
-// Define REST API endpoint to get all users
-app.get("/api/register/:username", (req, res) => {
-    const username = req.params.username;
-    const user = USERS_DATABASE.find((u) => u.userName === username);
-
-    // Check if user already exists
-    if (user) {
-        res.status(400).json({ error: "User already exists" });
-    }
-
-    // Create new user
-    const newUser = {
-        id: uuidv4(),
-        socketID: "",
-        userName: username,
-        isOnline: false,
-    };
-
-    USERS_DATABASE.push(newUser); // Add user to database
-
-    // Respond with the newly created user
-    res.status(201).json(newUser);
-});
-
+// Define REST API endpoint to login an existing user
+// "/api/login/:username"
+app.use(loginRoute);
 
 
 

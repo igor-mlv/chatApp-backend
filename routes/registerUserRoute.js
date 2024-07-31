@@ -11,7 +11,7 @@ router.get("/api/register/:username", (req, res) => {
 
     // Check if user already exists
     if (user) {
-        res.status(400).json({ error: "User already exists" });
+        return res.status(400).json({ error: "User already exists" });
     }
 
     // Create new user

@@ -4,16 +4,29 @@ import { Server } from "socket.io";
 import cors from "cors";
 import loginRoute from "./routes/loginRoute.js";
 import registerUserRoute from "./routes/registerUserRoute.js";
+import findUserByUserName from "./routes/findUserByUserNameRoute.js";
 
 const app = express();
+
 // Use CORS middleware to allow requests from frontend
 app.use(cors({
     origin: "http://localhost:3000", // Allow requests from this origin
     methods: ["GET", "POST"], // Allow these HTTP methods
 }));
 
-const httpServer = createServer(app);
+// Define REST API endpoint to register a new user
+// "/api/register/:username"
+app.use(registerUserRoute);
 
+// Define REST API endpoint to login an existing user
+// "/api/login/:username"
+app.use(loginRoute);
+
+// Define REST API endpoint to find an existing user
+// "/api/users/:username"
+app.use(findUserByUserName);
+
+const httpServer = createServer(app);
 
 // Initialize Socket.io server
 const io = new Server(httpServer, {
@@ -23,20 +36,14 @@ const io = new Server(httpServer, {
     methods: ["GET", "POST"],
 });
 
-// Define REST API endpoint to register a new user
-// "/api/register/:username"
-app.use(registerUserRoute);
-
-
-// Define REST API endpoint to login an existing user
-// "/api/login/:username"
-app.use(loginRoute);
-
-
+//const userSockets = {};
 
 // io is a server instance that contains all the sockets
 io.on("connect", (socket) => {
-
+    socket.on("setUser", (data) => {
+        console.log(data);
+    });
+    console.log("Client connected");
 });
 
 httpServer.listen(3001); 

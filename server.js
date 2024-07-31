@@ -5,6 +5,7 @@ import cors from "cors";
 import loginRoute from "./routes/loginRoute.js";
 import registerUserRoute from "./routes/registerUserRoute.js";
 import findUserByUserName from "./routes/findUserByUserNameRoute.js";
+import getAllUsers from "./routes/getAllUsers.js";
 
 const app = express();
 
@@ -22,6 +23,10 @@ app.use(registerUserRoute);
 // "/api/login/:username"
 app.use(loginRoute);
 
+// Define REST API endpoint to find all users
+// "/api/users/all"
+app.use(getAllUsers);
+
 // Define REST API endpoint to find an existing user
 // "/api/users/:username"
 app.use(findUserByUserName);
@@ -36,14 +41,23 @@ const io = new Server(httpServer, {
     methods: ["GET", "POST"],
 });
 
-//const userSockets = {};
+// Create an object to store user IDs and their corresponding socket IDs
+// userSockets[userID] = socketID
+const userSockets = {};
 
 // io is a server instance that contains all the sockets
 io.on("connect", (socket) => {
     socket.on("setUser", (data) => {
         console.log(data);
     });
-    console.log("Client connected");
+
+    socket.on("setUserIDtoSocketID", (userID) => {
+        if (typeof userID === 'string') {
+            userSockets[userID] = socket.id;
+        } else {
+            console.error('userID must be a string');
+        }
+    })
 });
 
 httpServer.listen(3001); 

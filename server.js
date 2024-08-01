@@ -6,6 +6,8 @@ import loginRoute from "./routes/loginRoute.js";
 import registerUserRoute from "./routes/registerUserRoute.js";
 import findUserByUserName from "./routes/findUserByUserNameRoute.js";
 import getAllUsers from "./routes/getAllUsers.js";
+import { v4 as uuidv4 } from "uuid";
+import USERS_DATABASE from './user_database/index.js';
 
 const app = express();
 
@@ -51,13 +53,48 @@ io.on("connect", (socket) => {
         console.log(data);
     });
 
+    let CURRENT_USER_ID;
     socket.on("setUserIDtoSocketID", (userID) => {
         if (typeof userID === 'string') {
             userSockets[userID] = socket.id;
+            CURRENT_USER_ID = userID;
         } else {
             console.error('userID must be a string');
         }
     })
-});
 
+    socket.on("createChat", (users) => {
+        //generate a unique id for the chat
+        const chatID = uuidv4();
+
+        // send the chat id to all users
+        users.forEach((user) => {
+            const socketID = userSockets[user.id];
+            if (socketID) {
+                io.to(socketID).emit("newChatCreated", chatID);
+            }
+        });
+
+        //also current socket join the chat room,
+        //because users contains only the selected users for new chat, 
+        //not the current user
+        socket.emit("newChatCreated", chatID);
+    });
+
+    socket.on("joinChat", (chatID) => {
+        socket.join(chatID);
+
+        // Update the user's room list
+        const user = USERS_DATABASE.find(
+            (u) => u.id === CURRENT_USER_ID
+        );
+
+        // Ensure the user exists and the chatID is not already in the rooms
+        if (user && !user.rooms.includes(chatID)) {
+            user.rooms.push(chatID);
+        }
+
+        console.log(USERS_DATABASE);
+    });
+});
 httpServer.listen(3001); 

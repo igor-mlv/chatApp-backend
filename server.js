@@ -95,6 +95,8 @@ io.on("connect", (socket) => {
         }
 
         console.log(USERS_DATABASE);
+
+        socket.emit("updateRoomsList", user.rooms);
     });
 });
 httpServer.listen(3001); 

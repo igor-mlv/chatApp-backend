@@ -98,5 +98,16 @@ io.on("connect", (socket) => {
 
         socket.emit("updateRoomsList", user.rooms);
     });
+
+    socket.on("chatMessage", (data) => {
+        const chatID = data.chatID;
+        const messageData = {
+            sender: data.sender,
+            text: data.text,
+        };
+        // Send the message to all users in the chat room
+        io.to(chatID).emit("chatMessage", messageData);
+
+    });
 });
 httpServer.listen(3001); 

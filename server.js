@@ -102,6 +102,7 @@ io.on("connect", (socket) => {
     socket.on("chatMessage", (data) => {
         const chatID = data.chatID;
         const messageData = {
+            chatID: data.chatID,
             sender: data.sender,
             text: data.text,
         };

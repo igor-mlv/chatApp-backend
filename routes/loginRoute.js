@@ -9,6 +9,8 @@ router.get("/api/login/:username", (req, res) => {
 
     // Check if user already exists
     if (user) {
+        //reset all rooms when user refresh page or login again
+        user.rooms = [];
         return res.status(201).json(user);
     }
 

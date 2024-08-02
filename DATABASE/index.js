@@ -1,6 +1,11 @@
+// { id: "1", 
+// socketID: "", 
+// userName: "superuser", 
+// isOnline: false, 
+// rooms: ["room1", "room2"] },
 // Mock database of users
 const USERS_DATABASE = [
-    { id: "1", socketID: "", userName: "superuser", isOnline: false, rooms: ["room1", "room2"] },
+    { id: "1", socketID: "", userName: "admin", isOnline: false, rooms: ["room"] },
 ];
 
 export const ROOMS_DATABASE = [

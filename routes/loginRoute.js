@@ -1,5 +1,5 @@
 import express from 'express';
-import USERS_DATABASE from '../user_database/index.js';;
+import USERS_DATABASE from '../DATABASE/index.js';;
 
 const router = express.Router();
 // Define REST API endpoint to login an existing user

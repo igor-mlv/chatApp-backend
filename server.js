@@ -7,7 +7,8 @@ import registerUserRoute from "./routes/registerUserRoute.js";
 import findUserByUserName from "./routes/findUserByUserNameRoute.js";
 import getAllUsers from "./routes/getAllUsers.js";
 import { v4 as uuidv4 } from "uuid";
-import USERS_DATABASE from './user_database/index.js';
+import USERS_DATABASE, { ROOMS_DATABASE } from './DATABASE/index.js';
+
 
 const app = express();
 
@@ -50,6 +51,8 @@ const userSockets = {};
 // io is a server instance that contains all the sockets
 io.on("connect", (socket) => {
     let CURRENT_USER_ID;
+    socket.emit("updateRoomsDatabase", ROOMS_DATABASE);
+
     socket.on("setUserIDtoSocketID", (userID) => {
         if (typeof userID === 'string') {
             userSockets[userID] = socket.id;
@@ -63,11 +66,18 @@ io.on("connect", (socket) => {
         //generate a unique id for the chat
         const chatID = uuidv4();
 
+        // add the chat to the rooms database
+        ROOMS_DATABASE.push({
+            id: chatID,
+            users: users.map((user) => user.userName),
+        });
+
         // send the chat id to all users
         users.forEach((user) => {
             const socketID = userSockets[user.id];
             if (socketID) {
                 io.to(socketID).emit("newChatCreated", chatID);
+                io.to(socketID).emit("updateRoomsDatabase", ROOMS_DATABASE);
             }
         });
 
@@ -75,6 +85,7 @@ io.on("connect", (socket) => {
         //because users contains only the selected users for new chat, 
         //not the current user
         socket.emit("newChatCreated", chatID);
+        socket.emit("updateRoomsDatabase", ROOMS_DATABASE);
     });
 
     socket.on("joinChat", (chatID) => {
@@ -104,5 +115,6 @@ io.on("connect", (socket) => {
         io.to(chatID).emit("chatMessage", messageData);
 
     });
+
 });
 httpServer.listen(3001); 

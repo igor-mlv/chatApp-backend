@@ -49,10 +49,6 @@ const userSockets = {};
 
 // io is a server instance that contains all the sockets
 io.on("connect", (socket) => {
-    socket.on("setUser", (data) => {
-        console.log(data);
-    });
-
     let CURRENT_USER_ID;
     socket.on("setUserIDtoSocketID", (userID) => {
         if (typeof userID === 'string') {
@@ -93,8 +89,6 @@ io.on("connect", (socket) => {
         if (user && !user.rooms.includes(chatID)) {
             user.rooms.push(chatID);
         }
-
-        console.log(USERS_DATABASE);
 
         socket.emit("updateRoomsList", user.rooms);
     });

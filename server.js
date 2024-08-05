@@ -7,8 +7,7 @@ import registerUserRoute from "./routes/registerUserRoute.js";
 import findUserByUserName from "./routes/findUserByUserNameRoute.js";
 import getAllUsers from "./routes/getAllUsers.js";
 import { v4 as uuidv4 } from "uuid";
-import USERS_DATABASE, { ROOMS_DATABASE } from './DATABASE/index.js';
-
+import USERS_DATABASE from './user_database/index.js';
 
 const app = express();
 
@@ -50,13 +49,15 @@ const userSockets = {};
 
 // io is a server instance that contains all the sockets
 io.on("connect", (socket) => {
-    let CURRENT_USER_ID;
-    socket.emit("updateRoomsDatabase", ROOMS_DATABASE);
+    socket.on("setUser", (data) => {
+        console.log(data);
+    });
 
+    let currentUserID;
     socket.on("setUserIDtoSocketID", (userID) => {
         if (typeof userID === 'string') {
             userSockets[userID] = socket.id;
-            CURRENT_USER_ID = userID;
+            currentUserID = userID;
         } else {
             console.error('userID must be a string');
         }
@@ -65,27 +66,22 @@ io.on("connect", (socket) => {
     socket.on("createChat", (users) => {
         //generate a unique id for the chat
         const chatID = uuidv4();
-
-        // add the chat to the rooms database
-        ROOMS_DATABASE.push({
-            id: chatID,
-            users: users.map((user) => user.userName),
-        });
+        console.log(users, "from create chat");
 
         // send the chat id to all users
         users.forEach((user) => {
             const socketID = userSockets[user.id];
             if (socketID) {
-                io.to(socketID).emit("newChatCreated", chatID);
-                io.to(socketID).emit("updateRoomsDatabase", ROOMS_DATABASE);
+                console.log(socketID, userSockets);
+                io.to(socketID).emit("joinChat", chatID);
             }
         });
 
         //also current socket join the chat room,
         //because users contains only the selected users for new chat, 
         //not the current user
-        socket.emit("newChatCreated", chatID);
-        socket.emit("updateRoomsDatabase", ROOMS_DATABASE);
+        // io.socket.emit("joinChat", chatID);
+        io.to(socket.id).emit("joinChat", chatID);
     });
 
     socket.on("joinChat", (chatID) => {
@@ -93,7 +89,7 @@ io.on("connect", (socket) => {
 
         // Update the user's room list
         const user = USERS_DATABASE.find(
-            (u) => u.id === CURRENT_USER_ID
+            (u) => u.id === currentUserID
         );
 
         // Ensure the user exists and the chatID is not already in the rooms
@@ -101,20 +97,7 @@ io.on("connect", (socket) => {
             user.rooms.push(chatID);
         }
 
-        socket.emit("updateRoomsList", user.rooms);
+        console.log(USERS_DATABASE);
     });
-
-    socket.on("chatMessage", (data) => {
-        const chatID = data.chatID;
-        const messageData = {
-            chatID: data.chatID,
-            sender: data.sender,
-            text: data.text,
-        };
-        // Send the message to all users in the chat room
-        io.to(chatID).emit("chatMessage", messageData);
-
-    });
-
 });
-httpServer.listen(3004); 
+httpServer.listen(3001); 
